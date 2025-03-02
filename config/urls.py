@@ -1,0 +1,46 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from rest_framework_simplejwt import views as jwt_views
+from .swaggers import schema_view
+
+urlpatterns = [
+    path("secret/admin/", admin.site.urls),
+    path(
+        "admin/", include("admin_honeypot.urls", namespace="admin_honeypot")
+    ),  # Security honeypot/
+    # accounts
+    path("accounts/", include("accounts.urls")),
+    path("accounts/", include("allauth.urls")),
+    # APPS
+    path("announcements/", include("announcements.urls")),
+    path("connect_announcements/", include("connect_announcements.urls")),
+    path("images/", include("images.urls")),
+    path("chat/", include("chat.urls")),
+    path("industry/", include("industry.urls")),
+    # hitcount
+    path("hitcount/", include("hitcount.urls", namespace="hitcount")),
+    # API authentication
+    path("api/v1/drf-auth/", include("rest_framework.urls")),
+    # API documentation
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    # JWT authentication
+    path(
+        "api/token/", jwt_views.TokenObtainPairView.as_view(), name="token_obtain_pair"
+    ),
+    path(
+        "api/token/refresh/", jwt_views.TokenRefreshView.as_view(), name="token_refresh"
+    ),
+    path("api/token/verify/", jwt_views.TokenVerifyView.as_view(), name="token_verify"),
+    path(
+        "api/token/blacklist/",
+        jwt_views.TokenBlacklistView.as_view(),
+        name="token_blacklist",
+    ),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
