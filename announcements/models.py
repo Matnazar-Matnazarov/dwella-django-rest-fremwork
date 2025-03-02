@@ -46,7 +46,6 @@ class Announcement(BaseModel):
         Hit,
         related_query_name="hit_count_generic_relation",
         object_id_field="object_pk",
-        count=True,
     )
 
     class Meta:

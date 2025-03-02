@@ -35,6 +35,8 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 # Application definition
 
 DJANGO_APPS = [
+    "captcha",  # Captcha add
+    'multi_captcha_admin',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -52,7 +54,6 @@ THIRD_PARTY_APPS = [
     "drf_yasg",  # swaggers
     "django_json_widget",  # json filds admin panel
     "hitcount",  # hitcount
-    "admin_honeypot",  # admin honeypot
     "import_export",  # import export
     # Allauth
     "allauth",
@@ -84,6 +85,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",  # Allauth middleware
 ]
+
+MULTI_CAPTCHA_ADMIN = {
+    'engine': 'simple-captcha',
+}
 
 ROOT_URLCONF = "config.urls"
 

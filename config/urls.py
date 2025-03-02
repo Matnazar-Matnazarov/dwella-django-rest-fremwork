@@ -7,9 +7,8 @@ from .swaggers import schema_view
 
 urlpatterns = [
     path("secret/admin/", admin.site.urls),
-    path(
-        "admin/", include("admin_honeypot.urls", namespace="admin_honeypot")
-    ),  # Security honeypot/
+
+    path("captcha/", include("captcha.urls")),  # Captcha uchun URL-lar
     # accounts
     path("accounts/", include("accounts.urls")),
     path("accounts/", include("allauth.urls")),

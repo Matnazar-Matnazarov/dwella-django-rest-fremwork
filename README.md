@@ -35,3 +35,8 @@ git clone https://github.com/Matnazar-Matnazarov/Dwella.git
 # Virtual muhitni yaratish va faollashtirish
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+
+# Loyiha ishga tushirish
+python manage.py runserver
+

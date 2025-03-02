@@ -22,6 +22,7 @@ class IndustryUser(BaseModel):
     )
     price = models.FloatField(null=True, blank=True)
     internship = models.CharField(max_length=255, null=True, blank=True)
+    star = models.FloatField(default=0, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Industry Users"

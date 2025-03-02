@@ -39,15 +39,30 @@ class PhoneNumberValidator(object):
     def __call__(self, value):
         if not re.match(self.regex, value):
             raise ValidationError(self.message, code="invalid")
+    
+    def deconstruct(self):
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__name__}",
+            [],
+            {
+                "regex": self.regex,
+                "message": self.message,
+            },
+        )
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=255, unique=True)
-    email = models.EmailField(unique=True, null=True, blank=True)
+    username = models.CharField(max_length=255, unique=True, db_index=True)
+    email = models.EmailField(unique=True, null=True, blank=True, db_index=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(
-        max_length=255, null=True, blank=True, validators=[PhoneNumberValidator()]
+        max_length=255,
+        null=True,
+        blank=True,
+        validators=[PhoneNumberValidator()],
+        db_index=True,
+        unique=True,
     )
     picture = models.ImageField(
         upload_to="users/",
@@ -96,9 +111,23 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class Like(BaseModel):
     user = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, blank=True
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="likes_given",
+        null=True,
+        blank=True,
+    )
+    master = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="likes_received",
+        null=True,
+        blank=True,
     )
     is_like = models.BooleanField(default=True)
-    master = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, blank=True
-    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user"], name="user_index"),
+            models.Index(fields=["master"], name="master_index"),
+        ]

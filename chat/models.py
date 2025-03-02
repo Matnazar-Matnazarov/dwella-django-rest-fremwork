@@ -35,6 +35,6 @@ class Chat(BaseModel):
 
     class Meta:
         indexes = [
-            models.Index(fields=["master"], name="master_index"),
-            models.Index(fields=["client"], name="client_index"),
+            models.Index(fields=["master"], name="master_index_chat"),
+            models.Index(fields=["client"], name="client_index_chat"),
         ]
