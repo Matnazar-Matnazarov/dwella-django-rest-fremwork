@@ -12,6 +12,8 @@ class Industry(BaseModel):
         verbose_name_plural = "Industries"
         verbose_name = "Industry"
 
+    def __str__(self):
+        return self.name
 
 class IndustryUser(BaseModel):
     user = models.ForeignKey(
@@ -27,3 +29,6 @@ class IndustryUser(BaseModel):
     class Meta:
         verbose_name_plural = "Industry Users"
         verbose_name = "Industry User"
+
+    def __str__(self):
+        return f"{self.user.username if self.user else ''} - {self.industry.name if self.industry else ''}- {self.star}"

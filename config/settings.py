@@ -35,6 +35,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 # Application definition
 
 DJANGO_APPS = [
+    "daphne",
     "captcha",  # Captcha add
     'multi_captcha_admin',
     "django.contrib.admin",
@@ -50,6 +51,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",  # rest API
     "channels",  # real time websocket
     "rest_framework_simplejwt",  # rest framework jwt
+    'rest_framework_gis', # rest fremwork gis
     "django_filters",  # rest framework custom filter
     "drf_yasg",  # swaggers
     "django_json_widget",  # json filds admin panel
@@ -72,9 +74,10 @@ LOCAL_APPS = [
     "industry",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['corsheaders']
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Whitenoise staticfiles
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -92,6 +95,8 @@ MULTI_CAPTCHA_ADMIN = {
 
 ROOT_URLCONF = "config.urls"
 
+
+ 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -111,12 +116,86 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+
+# Redis connection settings
+REDIS_HOST = env.str("REDIS_HOST")
+REDIS_PORT = env.int("REDIS_PORT")
+
+# Cache configuration
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
+            "SOCKET_TIMEOUT": 5,  # seconds
+            "RETRY_ON_TIMEOUT": True,
+            "MAX_CONNECTIONS": 1000,
+            "PARSER_CLASS": "redis.connection._HiredisParser",
+        }
+    }
+}
+CHANNEL_REDIS_HOST = env.str("CHANNEL_REDIS_HOST")
+CHANNEL_REDIS_PORT = env.int("CHANNEL_REDIS_PORT")
+
+# Channels layer configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT)],
+        },
+    },
+}
+
+# WebSocket CORS ruxsatlari
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+])
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8080',
+    'http://localhost:8080',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8081',
+    'http://localhost:8081',
+]
+
+# CORS sozlamalari
+CORS_ALLOW_ALL_ORIGINS = False  # True o'rniga False qilamiz
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "ENGINE": env.str("DB_ENGINE", default="django.contrib.gis.db.backends.postgis"),
         "NAME": env.str("DB_NAME"),
         "USER": env.str("DB_USER"),
         "PASSWORD": env.str("DB_PASSWORD"),
@@ -166,21 +245,22 @@ LANGUAGES = [
 ]
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
-STATICFILES_FINDERS = (
-    "django.contrib.staticfiles.finders.FileSystemFinder",
-    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-)
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# Whitenoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# Make sure these directories exist
+os.makedirs(STATIC_ROOT, exist_ok=True)
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -206,6 +286,14 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/minute",
+        "user": "100/minute",
+    },
     "SEARCH_PARAM": "search",
     "ORDERING_PARAM": "ordering",
 }
@@ -213,8 +301,8 @@ REST_FRAMEWORK = {
 # Simple JWT settings
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
@@ -259,23 +347,7 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
     'VALIDATOR_URL': None,
-    'OPERATIONS_SORTER': 'alpha',
-    'TAGS_SORTER': 'alpha',
-    'DOC_EXPANSION': 'none',
-    'DEFAULT_MODEL_RENDERING': 'model',
-    'DEFAULT_MODEL_DEPTH': 3,
-    'SHOW_EXTENSIONS': True,
-    'SHOW_COMMON_EXTENSIONS': True,
-    'SPEC_URL': 'https://www.dwella.com/api/schema/',
-    'SUPPORTED_SUBMIT_METHODS': [
-        'get',
-        'post',
-        'put',
-        'patch',
-        'delete',
-    ],
-    'PERSIST_AUTH': True,
-}
+    }
 
 SITE_ID = 1
 
@@ -295,10 +367,10 @@ GOOGLE_MAP_ID = env.str("GOOGLE_MAP_ID")
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        # 'APP': {
-        #     'client_id':'416230866474-c7d4jcaut4uqniepd7m9avrsov1voaee.apps.googleusercontent.com',
-        #     'secret': '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',
-        # },
+        'APP': {
+            'client_id':env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
+            'secret': env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
+        },
         "SCOPE": [
             "profile",
             "email",
@@ -320,10 +392,10 @@ SOCIALACCOUNT_PROVIDERS = {
             # "read:user",  # Profil ma'lumotlarini o'qish
             # "user:email",
         ],  # Emailni olish uchun kerak
-        # "APP": {
-        #     "client_id": "",  # Ov23liEt32aa7quPaFoj
-        #     "secret": "",  # 57d88841d13a1aae9eaf19daf810fb9ec32607d6
-        # },
+        "APP": {
+            "client_id": env.str("SOCIAL_AUTH_GITHUB_KEY"), 
+            "secret": env.str("SOCIAL_AUTH_GITHUB_SECRET"), 
+        },
         "AUTH_PARAMS": {
             "allow_signup": "true",
             "prompt": "consent",  # Har safar ruxsat so'rash
@@ -341,8 +413,39 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 ACCOUNT_EMAIL_REQUIRED = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "codemarketcode@gmail.com"
-EMAIL_HOST_PASSWORD = "pnddxszmhusletey"  # App password
+EMAIL_HOST = env.str("EMAIL_HOST")
+EMAIL_PORT = env.int("EMAIL_PORT")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS")
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")  # App password
+
+# During development, you can allow all origins
+# if DEBUG:
+#     CORS_ALLOW_ALL_ORIGINS = True
+# else:
+# CORS_ALLOWED_ORIGINS = [
+#     "https://www.dwella.com",
+#     "http://localhost:8000",
+#     "http://127.0.0.1:8000",
+# ]
+
+
+# Allowed hosts
+ALLOWED_HOSTS = ["*"]  # Development uchun
+
+# Celery Configuration and path to settings
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tashkent'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 daqiqa
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Frontend URL
+FRONTEND_URL = env.list("FRONTEND_URL", default=["http://127.0.0.1:8000", "http://127.0.0.1:8080"])
+
+# URL trailing slash settings
+APPEND_SLASH = False

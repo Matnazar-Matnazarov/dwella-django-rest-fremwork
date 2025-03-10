@@ -14,28 +14,18 @@ schema_view = get_schema_view(
         
         This API provides comprehensive endpoints for the Dwella Building Jobs platform.
         
-        ## Key Features
-        - User Authentication & Authorization
-        - Job Management
-        - Real-time Chat
-        - File Upload/Download
-        - Geolocation Services
-        
         ## Authentication
         All authenticated endpoints require a valid JWT token in the Authorization header:
         `Authorization: Bearer <token>`
         
         ## Rate Limiting
         API requests are limited to 100 requests per minute per user.
-        
-        ## Support
-        For technical support or API-related questions, please contact our support team.
         """,
-        terms_of_service="https://www.dwella.com/terms/",
+        # terms_of_service="https://www.dwella.com/terms/",
         contact=openapi.Contact(
             name="Dwella API Support",
-            email="api@dwella.com",
-            url="https://developers.dwella.com"
+            email="info@dwella.uz",
+            # url="https://developers.dwella.com"
         ),
         license=openapi.License(
             name="MIT License",
@@ -48,8 +38,6 @@ schema_view = get_schema_view(
         },
     ),
     public=True,
-    permission_classes=[permissions.IsAuthenticated],
-    patterns=None,  # Optional: specify URL patterns to include
-    authentication_classes=[],  # Empty list to allow unauthenticated access to docs
-    validators=['flex', 'ssv'],  # Enable additional validators
+    permission_classes=[permissions.AllowAny],
+    authentication_classes=[],  # Allow unauthenticated access to docs
 )

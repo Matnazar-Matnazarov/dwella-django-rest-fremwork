@@ -39,4 +39,15 @@ pip install -r requirements.txt
 
 # Loyiha ishga tushirish
 python manage.py runserver
+# 127.0.0.1:8000
+
+# Redis serverini ishga tushirish
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+
+# Terminal 1
+celery -A config worker -l info
+
+# Terminal 2
+celery -A config beat -l info
 
