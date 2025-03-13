@@ -46,5 +46,3 @@ class BaseModel(models.Model):
     def __str__(self):
         """Obyekt string ko'rinishi"""
         return f"{self.__class__.__name__}({self.guid})"
-
-    

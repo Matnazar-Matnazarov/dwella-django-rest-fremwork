@@ -3,9 +3,9 @@ from .api.views import AnnouncementViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'announcement', AnnouncementViewSet)
+router.register(r"announcement", AnnouncementViewSet)
 
 
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path("api/", include(router.urls)),
 ]

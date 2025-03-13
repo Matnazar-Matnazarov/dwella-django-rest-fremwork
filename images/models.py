@@ -2,8 +2,10 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from accounts.base_model import BaseModel
+
 # FileValidate
 from django.core.validators import FileExtensionValidator
+
 
 class ImageManager(models.Manager):
     def get_for_object(self, obj):
@@ -13,7 +15,16 @@ class ImageManager(models.Manager):
 
 
 class Image(BaseModel):
-    name = models.ImageField(upload_to="images/", null=True, blank=True, validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif', 'ico', 'webp'])])
+    name = models.ImageField(
+        upload_to="images/",
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["jpg", "jpeg", "png", "gif", "ico", "webp"]
+            )
+        ],
+    )
     # Add fields for generic relations
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

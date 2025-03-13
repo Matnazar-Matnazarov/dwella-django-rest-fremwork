@@ -15,7 +15,7 @@ class Role(models.TextChoices):
     USER = "CLIENT", "Client"
     MASTER = "MASTER", "Master"
     MANAGER = "MANAGER", "Manager"
-
+    SUPERADMIN = "SUPERADMIN", "Superadmin"
 
 class CustomUserManager(UserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -39,7 +39,7 @@ class PhoneNumberValidator(object):
     def __call__(self, value):
         if not re.match(self.regex, value):
             raise ValidationError(self.message, code="invalid")
-    
+
     def deconstruct(self):
         return (
             f"{self.__class__.__module__}.{self.__class__.__name__}",

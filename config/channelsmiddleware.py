@@ -13,15 +13,17 @@ from django.conf import settings
 
 User = get_user_model()
 
+
 @database_sync_to_async
 def get_user(validated_token):
     try:
         user = User.objects.get(id=validated_token["user_id"])
         print(f"{user}")
         return user
-   
+
     except User.DoesNotExist:
         return AnonymousUser()
+
 
 class JwtAuthMiddleware(BaseMiddleware):
     def __init__(self, inner):
@@ -50,22 +52,25 @@ class JwtAuthMiddleware(BaseMiddleware):
             try:
                 # Token validatsiyasi
                 UntypedToken(token)
-                decoded_data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+                decoded_data = jwt_decode(
+                    token, settings.SECRET_KEY, algorithms=["HS256"]
+                )
                 print(f"Decoded token data: {decoded_data}")  # Debug uchun
-                
+
                 user = await get_user(validated_token=decoded_data)
                 print(f"Retrieved user: {user}")  # Debug uchun
-                
+
                 scope["user"] = user
             except Exception as e:
                 print(f"Token validation error: {str(e)}")
                 scope["user"] = AnonymousUser()
-            
+
         except Exception as e:
             print(f"Middleware error: {str(e)}")
             scope["user"] = AnonymousUser()
 
         return await self.inner(scope, receive, send)
+
 
 def JwtAuthMiddlewareStack(inner):
     return JwtAuthMiddleware(AuthMiddlewareStack(inner))

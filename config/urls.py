@@ -8,7 +8,6 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path("secret/admin/", admin.site.urls),
-
     path("captcha/", include("captcha.urls")),  # Captcha uchun URL-lar
     # accounts
     path("accounts/", include("accounts.urls")),

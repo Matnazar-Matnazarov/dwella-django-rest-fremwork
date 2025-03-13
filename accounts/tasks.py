@@ -5,13 +5,16 @@ from django.utils import timezone
 from accounts.models import CustomUser
 from django.conf import settings
 
+
 @shared_task
 def send_verification_email_task(email, verification_url):
     """Email yuborish uchun task"""
     subject = "Email tasdiqlash"
-    message = (f'Iltimos, hisobingizni tasdiqlash uchun quyidagi havolaga kiring: {verification_url}\n'
-              f'Eslatma: Havola 5 daqiqa davomida amal qiladi.')
-    
+    message = (
+        f"Iltimos, hisobingizni tasdiqlash uchun quyidagi havolaga kiring: {verification_url}\n"
+        f"Eslatma: Havola 5 daqiqa davomida amal qiladi."
+    )
+
     send_mail(
         subject=subject,
         message=message,
@@ -19,6 +22,7 @@ def send_verification_email_task(email, verification_url):
         recipient_list=[email],
         fail_silently=False,
     )
+
 
 @shared_task
 def cleanup_expired_verification_tokens():
@@ -29,7 +33,7 @@ def cleanup_expired_verification_tokens():
     """
     # Hozirgi vaqtdan 5 daqiqa oldingi vaqtni hisoblash
     expiration_threshold = timezone.now() - timezone.timedelta(minutes=5)
-    
+
     # Quyidagi shartlarga mos keluvchi foydalanuvchilarni topish:
     # 1. is_active=False bo'lgan
     # 2. date_joined 5 daqiqadan oldin bo'lgan
@@ -38,20 +42,20 @@ def cleanup_expired_verification_tokens():
         is_active=False,
         date_joined__lte=expiration_threshold,
         is_staff=False,
-        is_superuser=False
+        is_superuser=False,
     )
-    
+
     # O'chirilgan foydalanuvchilar sonini saqlash
     deleted_count = expired_users.count()
-    
+
     if deleted_count > 0:
         # Cache dan verification tokenlarni o'chirish
         for user in expired_users:
             cache.delete(f"email_verification_{user.id}")
-        
+
         # Foydalanuvchilarni o'chirish
         expired_users.delete()
-        
+
         return f"{deleted_count} ta muddati o'tgan foydalanuvchilar o'chirildi"
-    
-    return "O'chirilishi kerak bo'lgan foydalanuvchilar topilmadi" 
+
+    return "O'chirilishi kerak bo'lgan foydalanuvchilar topilmadi"

@@ -35,23 +35,24 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 # Application definition
 
 DJANGO_APPS = [
-    "daphne",
+    # "daphne",
     "captcha",  # Captcha add
-    'multi_captcha_admin',
+    "multi_captcha_admin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.gis",  # geo location 
+    "django.contrib.gis",  # geo location
 ]
 
 THIRD_PARTY_APPS = [
     "rest_framework",  # rest API
+    "rest_framework_api_key",  # rest framework api key
     "channels",  # real time websocket
     "rest_framework_simplejwt",  # rest framework jwt
-    'rest_framework_gis', # rest fremwork gis
+    "rest_framework_gis",  # rest fremwork gis
     "django_filters",  # rest framework custom filter
     "drf_yasg",  # swaggers
     "django_json_widget",  # json filds admin panel
@@ -74,10 +75,10 @@ LOCAL_APPS = [
     "industry",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['corsheaders']
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ["corsheaders"]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Whitenoise staticfiles
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -90,13 +91,12 @@ MIDDLEWARE = [
 ]
 
 MULTI_CAPTCHA_ADMIN = {
-    'engine': 'simple-captcha',
+    "engine": "simple-captcha",
 }
 
 ROOT_URLCONF = "config.urls"
 
 
- 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -133,9 +133,12 @@ CACHES = {
             "RETRY_ON_TIMEOUT": True,
             "MAX_CONNECTIONS": 1000,
             "PARSER_CLASS": "redis.connection._HiredisParser",
-        }
+        },
     }
 }
+
+
+
 CHANNEL_REDIS_HOST = env.str("CHANNEL_REDIS_HOST")
 CHANNEL_REDIS_PORT = env.int("CHANNEL_REDIS_PORT")
 
@@ -150,44 +153,48 @@ CHANNEL_LAYERS = {
 }
 
 # WebSocket CORS ruxsatlari
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:8080",
-    "http://localhost:8080",
-])
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:8080",
+        "http://localhost:8080",
+    ],
+)
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1:8080',
-    'http://localhost:8080',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8081',
-    'http://localhost:8081',
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8081",
+    "http://localhost:8081",
 ]
 
 # CORS sozlamalari
 CORS_ALLOW_ALL_ORIGINS = False  # True o'rniga False qilamiz
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
 
 CORS_ALLOWED_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "x-api-key",  # API key uchun header qo'shamiz
 ]
 
 # Database
@@ -195,7 +202,9 @@ CORS_ALLOWED_HEADERS = [
 
 DATABASES = {
     "default": {
-        "ENGINE": env.str("DB_ENGINE", default="django.contrib.gis.db.backends.postgis"),
+        "ENGINE": env.str(
+            "DB_ENGINE", default="django.contrib.gis.db.backends.postgis"
+        ),
         "NAME": env.str("DB_NAME"),
         "USER": env.str("DB_USER"),
         "PASSWORD": env.str("DB_PASSWORD"),
@@ -245,18 +254,18 @@ LANGUAGES = [
 ]
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, "static"),
 ]
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Whitenoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Make sure these directories exist
 os.makedirs(STATIC_ROOT, exist_ok=True)
@@ -274,6 +283,7 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        # "rest_framework_api_key.permissions.HasAPIKey",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -287,12 +297,12 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle", # Anonim foydalanuvchilar uchun
+        "rest_framework.throttling.UserRateThrottle", # Ro'yxatdan o'tgan foydalanuvchilar uchun
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/minute",
-        "user": "100/minute",
+        "anon": "100/day", # Anonim foydalanuvchilar uchun
+        "user": "1000/day", # Ro'yxatdan o'tgan foydalanuvchilar uchun
     },
     "SEARCH_PARAM": "search",
     "ORDERING_PARAM": "ordering",
@@ -337,17 +347,13 @@ SIMPLE_JWT = {
 
 # Swagger settings
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     },
-    'USE_SESSION_AUTH': False,
-    'JSON_EDITOR': True,
-    'VALIDATOR_URL': None,
-    }
+    "USE_SESSION_AUTH": False,
+    "JSON_EDITOR": True,
+    "VALIDATOR_URL": None,
+}
 
 SITE_ID = 1
 
@@ -367,10 +373,10 @@ GOOGLE_MAP_ID = env.str("GOOGLE_MAP_ID")
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        'APP': {
-            'client_id':env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
-            'secret': env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
-        },
+        # "APP": {
+        #     "client_id": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
+        #     "secret": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
+        # },
         "SCOPE": [
             "profile",
             "email",
@@ -392,10 +398,10 @@ SOCIALACCOUNT_PROVIDERS = {
             # "read:user",  # Profil ma'lumotlarini o'qish
             # "user:email",
         ],  # Emailni olish uchun kerak
-        "APP": {
-            "client_id": env.str("SOCIAL_AUTH_GITHUB_KEY"), 
-            "secret": env.str("SOCIAL_AUTH_GITHUB_SECRET"), 
-        },
+        # "APP": {
+        #     "client_id": env.str("SOCIAL_AUTH_GITHUB_KEY"),
+        #     "secret": env.str("SOCIAL_AUTH_GITHUB_SECRET"),
+        # },
         "AUTH_PARAMS": {
             "allow_signup": "true",
             "prompt": "consent",  # Har safar ruxsat so'rash
@@ -419,33 +425,24 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS")
 EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")  # App password
 
-# During development, you can allow all origins
-# if DEBUG:
-#     CORS_ALLOW_ALL_ORIGINS = True
-# else:
-# CORS_ALLOWED_ORIGINS = [
-#     "https://www.dwella.com",
-#     "http://localhost:8000",
-#     "http://127.0.0.1:8000",
-# ]
 
-
-# Allowed hosts
-ALLOWED_HOSTS = ["*"]  # Development uchun
 
 # Celery Configuration and path to settings
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND")
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Asia/Tashkent"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 daqiqa
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Frontend URL
-FRONTEND_URL = env.list("FRONTEND_URL", default=["http://127.0.0.1:8000", "http://127.0.0.1:8080"])
+FRONTEND_URL = env.list(
+    "FRONTEND_URL", default=["http://127.0.0.1:8000", "http://127.0.0.1:8080"]
+)
 
 # URL trailing slash settings
 APPEND_SLASH = False
+

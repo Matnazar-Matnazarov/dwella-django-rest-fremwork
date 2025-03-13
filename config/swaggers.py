@@ -8,7 +8,7 @@ from django.conf import settings
 schema_view = get_schema_view(
     openapi.Info(
         title="Dwella Building Jobs API",
-        default_version='v1',
+        default_version="v1",
         description="""
         # Dwella Building Jobs REST API Documentation
         
@@ -28,13 +28,12 @@ schema_view = get_schema_view(
             # url="https://developers.dwella.com"
         ),
         license=openapi.License(
-            name="MIT License",
-            url="https://opensource.org/licenses/MIT"
+            name="MIT License", url="https://opensource.org/licenses/MIT"
         ),
         x_logo={
             "url": settings.STATIC_URL + "images/logo.png",
             "backgroundColor": "#FFFFFF",
-            "altText": "Dwella logo"
+            "altText": "Dwella logo",
         },
     ),
     public=True,
