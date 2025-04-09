@@ -9,23 +9,21 @@ from django.contrib.auth import logout
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.core.mail import send_mail
 import random
 import string
 import os
 import threading
 from django.utils import timezone
-from datetime import timedelta
-from django.urls import reverse
 from django.conf import settings
-import time
 from django.core.cache import cache
 from celery import shared_task
-import asyncio
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from accounts.tasks import send_verification_email_task
+from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 # email verification token send email
 
@@ -70,12 +68,12 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     http_method_names = ["get", "post", "put", "delete"]
-
+    
     def get_permissions(self):
         """
         Action ga qarab permission ni belgilash
         """
-        if self.action == "create" or self.action == "verify_email":
+        if self.action in ['create', 'verify_email']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
@@ -117,78 +115,111 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        
         if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+            return Response({
+                'status': 'error',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             # Foydalanuvchini yaratish
             user = serializer.save(is_active=False)
 
             # Verification token yaratish
-            verification_token = "".join(
-                random.choices(string.ascii_letters + string.digits, k=32)
-            )
-
-            # Token va timestamp ni Redis-cache ga saqlash
+            verification_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+            
+            # Token ma'lumotlarini cache ga saqlash
             cache_key = f"email_verification_{verification_token}"
-            cache_data = {"user_id": user.id, "timestamp": timezone.now().timestamp()}
-            # 5 daqiqalik TTL bilan saqlash
-            cache.set(cache_key, cache_data, timeout=300)
+            cache.set(cache_key, {
+                'user_id': user.id,
+                'email': user.email,
+                'timestamp': timezone.now().timestamp()
+            }, timeout=300)  # 5 daqiqa
+
+            # Verification URL
+            verification_url = f"{settings.FRONTEND_URL}/accounts/api/users/verify-email/?token={verification_token}"
 
             # Email yuborish
-            # Backend URL ni ishlatamiz, chunki verify-email endpointi backend da
-            verification_url = f"{settings.FRONTEND_URL}/accounts/api/users/verify-email/{verification_token}"
             send_verification_email_task.delay(user.email, verification_url)
 
-            return Response(
-                {
-                    "message": "Foydalanuvchi yaratildi. Iltimos emailingizni tasdiqlang.",
-                    "data": serializer.data,
-                },
-                status=201,
-            )
+            return Response({
+                'status': 'success',
+                'message': 'Foydalanuvchi yaratildi. Email orqali tasdiqlash havolasi yuborildi.',
+                'data': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }
+            }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            # Xatolik yuz berganda foydalanuvchini o'chiramiz
-            if "user" in locals():
+            # Xatolik yuz berganda foydalanuvchini o'chirish
+            if 'user' in locals():
                 user.delete()
-            return Response({"message": f"Xatolik yuz berdi: {str(e)}"}, status=400)
+            return Response({
+                'status': 'error',
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["get"], url_path="verify-email/(?P<token>[^/.]+)")
-    def verify_email(self, request, token=None):
+    @action(
+        detail=False, 
+        methods=['get'],
+        permission_classes=[AllowAny],
+        url_path='verify-email',
+        url_name='verify-email'
+    )
+    @method_decorator(csrf_exempt)
+    def verify_email(self, request):
+        token = request.query_params.get('token')
+        
+        if not token:
+            return Response({
+                'status': 'error',
+                'message': 'Token topilmadi.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         # Cache dan token ma'lumotlarini olish
         cache_key = f"email_verification_{token}"
         cache_data = cache.get(cache_key)
 
         if not cache_data:
-            return Response({"message": "Noto'g'ri yoki yaroqsiz token."}, status=400)
+            return Response({
+                'status': 'error',
+                'message': 'Noto\'g\'ri yoki yaroqsiz token.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = CustomUser.objects.get(id=cache_data["user_id"])
-
-            # Vaqt tekshiruvi
-            elapsed_time = timezone.now().timestamp() - cache_data["timestamp"]
+            user = CustomUser.objects.get(id=cache_data['user_id'])
+            
+            # Token muddati tekshirish (5 daqiqa)
+            elapsed_time = timezone.now().timestamp() - cache_data['timestamp']
             if elapsed_time > 300:  # 5 daqiqa
                 cache.delete(cache_key)
                 if not user.is_active:
                     user.delete()
-                return Response(
-                    {
-                        "message": "Tasdiqlash muddati tugagan. Iltimos, qaytadan ro'yxatdan o'ting."
-                    },
-                    status=400,
-                )
+                return Response({
+                    'status': 'error',
+                    'message': 'Tasdiqlash muddati tugagan. Iltimos, qaytadan ro\'yxatdan o\'ting.'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
+            # Foydalanuvchini aktivlashtirish
             user.is_active = True
             user.save()
-
-            # Cache dan token ni o'chirish
+            
+            # Cache
             cache.delete(cache_key)
 
-            return Response({"message": "Email muvaffaqiyatli tasdiqlandi."})
+            return Response({
+                'status': 'success',
+                'message': 'Email muvaffaqiyatli tasdiqlandi.'
+            }, status=status.HTTP_200_OK)
 
         except CustomUser.DoesNotExist:
-            return Response({"message": "Foydalanuvchi topilmadi."}, status=400)
+            return Response({
+                'status': 'error',
+                'message': 'Foydalanuvchi topilmadi.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
         # send email verification token
@@ -202,7 +233,6 @@ class LogoutView(APIView):
     """
     API endpoint for user logout
     """
-
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -215,8 +245,10 @@ class LogoutView(APIView):
         },
     )
     def post(self, request):
+        # Clear credentials
+        request.auth = None
         logout(request)
-        return Response(status=200)
+        return Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
 
 
 class LoginView(TokenObtainPairView):

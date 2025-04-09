@@ -11,6 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 
+
 class AnnouncementViewSet(viewsets.ModelViewSet):
     serializer_class = AnnouncementSerializer
     permission_classes = [HasAPIKeyOrIsAuthenticated]
@@ -18,25 +19,27 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     filter_backends = (DistanceToPointFilter,)
     pagination_class = PageNumberPagination
     throttle_classes = [UserRateThrottle, AnonRateThrottle]
-    
+
     # Asosiy queryset
-    queryset = Announcement.objects.filter(
-        is_deleted=False
-    ).select_related('client')
+    queryset = Announcement.objects.filter(is_deleted=False).select_related("client")
 
     def get_queryset(self):
-        # Swagger uchun tekshirish
+        # Swagger sxema yaratish so'rovi ekanligini tekshirish
         if getattr(self, 'swagger_fake_view', False):
             return Announcement.objects.none()
-        
-        # Asosiy queryset
-        return super().get_queryset()
+
+        # Asosiy queryset'ni olish
+        queryset = super().get_queryset().select_related("client").prefetch_related("images")
+        return queryset
 
     def perform_create(self, serializer):
         if self.request.user.role in ["CLIENT", "ADMIN", "SUPERADMIN", "MANAGER"]:
             serializer.save(client=self.request.user)
         else:
-            return Response(status=status.HTTP_403_FORBIDDEN, data={"message": "You are not allowed to create an announcement"})
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={"message": "You are not allowed to create an announcement"},
+            )
 
     def perform_update(self, serializer):
         if serializer.instance.client == self.request.user:
@@ -58,7 +61,10 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         if request.user.role in ["CLIENT", "ADMIN", "SUPERADMIN", "MANAGER"]:
             queryset = queryset.filter(client=request.user)
         else:
-            return Response(status=status.HTTP_403_FORBIDDEN, data={"message": "You are not allowed to get announcements"})
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"message": "You are not allowed to get announcements"},
+            )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -82,7 +88,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
                 | Q(name__icontains=search_term)
                 | Q(description__icontains=search_term)
             )
-        ).select_related("client")
+        ).select_related("client").prefetch_related("images")
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -91,10 +97,14 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @method_decorator(cache_page(60 * 60, key_prefix="announcements_list"))  # 1 soat cache
+    @method_decorator(
+        cache_page(60 * 60, key_prefix="announcements_list")
+    )  # 1 soat cache
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @method_decorator(cache_page(60 * 60, key_prefix="announcements_detail"))  # 1 soat cache
+    @method_decorator(
+        cache_page(60 * 60, key_prefix="announcements_detail")
+    )  # 1 soat cache
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)

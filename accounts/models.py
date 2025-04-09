@@ -7,6 +7,8 @@ from django.contrib.auth.models import (
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from .base_model import BaseModel
+from simple_history.models import HistoricalRecords
+
 import re
 
 
@@ -16,6 +18,7 @@ class Role(models.TextChoices):
     MASTER = "MASTER", "Master"
     MANAGER = "MANAGER", "Manager"
     SUPERADMIN = "SUPERADMIN", "Superadmin"
+
 
 class CustomUserManager(UserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -84,7 +87,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     objects = CustomUserManager()
-
+    history = HistoricalRecords(inherit=True)
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
     REQUIRED_FIELDS = ["email", "role"]

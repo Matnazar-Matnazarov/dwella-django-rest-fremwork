@@ -1,0 +1,6 @@
+### announcement list
+GET http://127.0.0.1:8000/announcements/api/announcement/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQyMzIzMDE4LCJpYXQiOjE3NDIyMzY2MTgsImp0aSI6IjIyYWUwOTdhZjg0ZTQ3YTE5NjYxYmVlMDMwMzczY2JmIiwidXNlcl9pZCI6Mn0.500BIZzatgj2nwXYHW_-1OVeWTEHs7BbsaCu8JAgAvo
+X-API-Key: gO2NLMxH.kzjIzCynumg4EZnewyiaMzV82nbJ0buL
+

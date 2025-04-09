@@ -7,11 +7,13 @@ from .swaggers import schema_view
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
-    path("secret/admin/", admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path("captcha/", include("captcha.urls")),  # Captcha uchun URL-lar
     # accounts
     path("accounts/", include("accounts.urls")),
     path("accounts/", include("allauth.urls")),
+    path("accounts/", include("dj_rest_auth.urls")),
+    path("accounts/", include("dj_rest_auth.registration.urls")),
     # APPS
     path("announcements/", include("announcements.urls")),
     path("connect_announcements/", include("connect_announcements.urls")),

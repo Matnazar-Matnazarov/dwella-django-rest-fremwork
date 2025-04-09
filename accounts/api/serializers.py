@@ -4,49 +4,55 @@ from accounts.models import CustomUser
 from industry.models import IndustryUser
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    password = serializers.CharField(
-        write_only=True, required=True, style={"input_type": "password"}
-    )
+class UserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(
-        write_only=True, required=True, style={"input_type": "password"}
+        style={'input_type': 'password'},
+        write_only=True
     )
-
+    
     class Meta:
-        """Meta class for the UserSerializer"""
-
         model = CustomUser
-        fields = [
-            "url",
-            "username",
-            "email",
-            "password",
-            "password2",
-            "is_staff",
-            "is_active",
-            "date_joined",
-        ]
-        read_only_fields = ["is_staff", "is_active", "date_joined"]
+        fields = ('id', 'username', 'email', 'password', 'password2')
+        extra_kwargs = {
+            'password': {
+                'write_only': True,
+                'style': {'input_type': 'password'}
+            },
+            'id': {'read_only': True}
+        }
 
-    def validate(self, data):
-        """Validation for password and password2"""
-        if data["password"] != data["password2"]:
-            raise serializers.ValidationError("Parollar bir xil emas")
-        return data
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({
+                "password": "Parollar bir xil emas."
+            })
+        if  CustomUser.objects.filter(username = attrs['username'],email=attrs['email']).first():
+             raise serializers.ValidationError({
+                "user or email": "uniqe"
+            })
+        return attrs
 
     def create(self, validated_data):
-        """Create a new user"""
-        # password2 ni o'chiramiz chunki u modelda yo'q
-        validated_data.pop("password2")
-        password = validated_data.pop("password")
-
-        # Foydalanuvchini yaratamiz
-        user = CustomUser.objects.create(**validated_data)
-        # Parolni xeshlaymiz
-        user.set_password(password)
+        # password2 ni olib tashlash
+        validated_data.pop('password2', None)
+        
+        # Yangi foydalanuvchi yaratish
+        user = CustomUser(
+            username=validated_data['username'],
+            email=validated_data['email']
+        )
+        user.is_active = False
+        # Parolni xavfsiz saqlash
+        user.set_password(validated_data['password'])
         user.save()
-
+        
         return user
+
+    def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            password = validated_data.pop('password')
+            instance.set_password(password)  # Parolni yangilashda ham shifrlash
+        return super().update(instance, validated_data)
 
 
 class IndustryUserSerializer(serializers.ModelSerializer):

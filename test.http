@@ -1,0 +1,11 @@
+python manage.py runserver
+
+celery -A config worker -l INFO
+
+
+celery -A config beat -l INFO
+
+
+sudo systemctl status redis-server
+# Agar ishlamayotgan bo'lsa
+sudo systemctl start redis-server

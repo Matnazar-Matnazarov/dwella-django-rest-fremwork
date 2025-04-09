@@ -18,18 +18,18 @@ class Industry(BaseModel):
 
 class IndustryUser(BaseModel):
     user = models.ForeignKey(
-        CustomUser, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        related_name='industryuser'
+        related_name="industryuser",
     )
     industry = models.ForeignKey(
-        Industry, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        Industry,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        related_name='industryuser_industry'
+        related_name="industryuser_industry",
     )
     price = models.FloatField(null=True, blank=True)
     internship = models.CharField(max_length=255, null=True, blank=True)

@@ -18,13 +18,17 @@ schema_view = get_schema_view(
         All authenticated endpoints require a valid JWT token in the Authorization header:
         `Authorization: Bearer <token>`
         
+        ## API Key
+        All authenticated endpoints require a valid API key in the X-API-Key header:
+        `X-API-Key: <your-api-key>`
+        
         ## Rate Limiting
         API requests are limited to 100 requests per minute per user.
         """,
         # terms_of_service="https://www.dwella.com/terms/",
         contact=openapi.Contact(
             name="Dwella API Support",
-            email="info@dwella.uz",
+            email="info@dwella.com",
             # url="https://developers.dwella.com"
         ),
         license=openapi.License(

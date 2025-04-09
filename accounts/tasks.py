@@ -9,19 +9,25 @@ from django.conf import settings
 @shared_task
 def send_verification_email_task(email, verification_url):
     """Email yuborish uchun task"""
-    subject = "Email tasdiqlash"
-    message = (
-        f"Iltimos, hisobingizni tasdiqlash uchun quyidagi havolaga kiring: {verification_url}\n"
-        f"Eslatma: Havola 5 daqiqa davomida amal qiladi."
-    )
+    try:
+        subject = "Email tasdiqlash"
+        message = (
+            f"Iltimos, hisobingizni tasdiqlash uchun quyidagi havolaga kiring:\n\n"
+            f"{verification_url}\n\n"
+            f"Eslatma: Havola 5 daqiqa davomida amal qiladi."
+        )
 
-    send_mail(
-        subject=subject,
-        message=message,
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[email],
-        fail_silently=False,
-    )
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Email yuborishda xatolik: {e}")
+        return False
 
 
 @shared_task

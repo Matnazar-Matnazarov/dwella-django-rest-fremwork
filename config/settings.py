@@ -38,6 +38,7 @@ DJANGO_APPS = [
     # "daphne",
     "captcha",  # Captcha add
     "multi_captcha_admin",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -49,7 +50,13 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",  # rest API
+    "rest_framework.authtoken",  # Token autentifikatsiya uchun
     "rest_framework_api_key",  # rest framework api key
+    
+    # dj-rest-auth
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    
     "channels",  # real time websocket
     "rest_framework_simplejwt",  # rest framework jwt
     "rest_framework_gis",  # rest fremwork gis
@@ -64,7 +71,11 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",  # Google oauth
     "allauth.socialaccount.providers.github",  # Github
+
+  
 ]
+
+SITE_ID = 1
 
 LOCAL_APPS = [
     "accounts",
@@ -138,7 +149,6 @@ CACHES = {
 }
 
 
-
 CHANNEL_REDIS_HOST = env.str("CHANNEL_REDIS_HOST")
 CHANNEL_REDIS_PORT = env.int("CHANNEL_REDIS_PORT")
 
@@ -152,29 +162,23 @@ CHANNEL_LAYERS = {
     },
 }
 
-# WebSocket CORS ruxsatlari
-CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS",
-    default=[
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://127.0.0.1:8080",
-        "http://localhost:8080",
-    ],
-)
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Development uchun
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    # Boshqa ruxsat berilgan originlar
+]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8080",
-    "http://localhost:8080",
-    "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://127.0.0.1:8081",
-    "http://localhost:8081",
+    "http://127.0.0.1:8000",
+    # Boshqa ishonchli originlar
 ]
 
 # CORS sozlamalari
-CORS_ALLOW_ALL_ORIGINS = False  # True o'rniga False qilamiz
-CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
@@ -197,6 +201,9 @@ CORS_ALLOWED_HEADERS = [
     "x-api-key",  # API key uchun header qo'shamiz
 ]
 
+CSRF_COOKIE_SECURE = False  # Development uchun
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -297,12 +304,12 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle", # Anonim foydalanuvchilar uchun
-        "rest_framework.throttling.UserRateThrottle", # Ro'yxatdan o'tgan foydalanuvchilar uchun
+        "rest_framework.throttling.AnonRateThrottle",  # Anonim foydalanuvchilar uchun
+        "rest_framework.throttling.UserRateThrottle",  # Ro'yxatdan o'tgan foydalanuvchilar uchun
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/day", # Anonim foydalanuvchilar uchun
-        "user": "1000/day", # Ro'yxatdan o'tgan foydalanuvchilar uchun
+        "anon": "100/day",  # Anonim foydalanuvchilar uchun
+        "user": "1000/day",  # Ro'yxatdan o'tgan foydalanuvchilar uchun
     },
     "SEARCH_PARAM": "search",
     "ORDERING_PARAM": "ordering",
@@ -348,8 +355,26 @@ SIMPLE_JWT = {
 # Swagger settings
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT token format: Bearer <token>",
+            # "scheme": "Bearer"
+        },
+        "ApiKey": {
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header",
+            "description": "API key format: <your-api-key>"
+        }
     },
+    "SECURITY": [
+        {
+            "Bearer": [],
+            "ApiKey": []
+        }
+    ],
     "USE_SESSION_AUTH": False,
     "JSON_EDITOR": True,
     "VALIDATOR_URL": None,
@@ -373,10 +398,10 @@ GOOGLE_MAP_ID = env.str("GOOGLE_MAP_ID")
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
-        # "APP": {
-        #     "client_id": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
-        #     "secret": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
-        # },
+        "APP": {
+            "client_id": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
+            "secret": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
+        },
         "SCOPE": [
             "profile",
             "email",
@@ -412,6 +437,9 @@ SOCIALACCOUNT_PROVIDERS = {
     },
 }
 
+REST_USE_JWT = True
+
+
 SOCIALACCOUNT_ADAPTER = "accounts.adapters.CustomSocialAccountAdapter"
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_SIGNUP_FORM_CLASS = None  # Ro'yxatdan o'tish formasi kerak bo'lmasa
@@ -426,7 +454,6 @@ EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")  # App password
 
 
-
 # Celery Configuration and path to settings
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND")
@@ -438,11 +465,13 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 daqiqa
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-# Frontend URL
-FRONTEND_URL = env.list(
-    "FRONTEND_URL", default=["http://127.0.0.1:8000", "http://127.0.0.1:8080"]
-)
+# Frontend URL (list emas, string bo'lishi kerak)
+FRONTEND_URL = env.str("FRONTEND_URL", default="http://127.0.0.1:8000")
 
 # URL trailing slash settings
 APPEND_SLASH = False
 
+# Add these settings for admin
+ADMIN_URL = "secret/admin/"
+FORCE_SCRIPT_NAME = None
+LOGIN_REDIRECT_URL = f"/{ADMIN_URL}"
