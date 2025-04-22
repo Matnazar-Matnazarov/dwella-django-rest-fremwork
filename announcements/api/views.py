@@ -97,9 +97,9 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @method_decorator(
-        cache_page(60 * 60, key_prefix="announcements_list")
-    )  # 1 soat cache
+    # @method_decorator(
+    #     cache_page(60 * 60, key_prefix="announcements_list")
+    # )  # 1 soat cache
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 

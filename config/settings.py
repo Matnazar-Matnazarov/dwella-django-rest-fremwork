@@ -89,11 +89,11 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ["corsheaders"]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # CORS middleware must be at the top
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Whitenoise staticfiles
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -163,22 +163,18 @@ CHANNEL_LAYERS = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Development uchun
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for testing
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True  # For debugging
+CORS_ALLOW_ALL_HEADERS = True  # For debugging
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    # Boshqa ruxsat berilgan originlar
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    # Boshqa ishonchli originlar
-]
-
-# CORS sozlamalari
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
@@ -188,7 +184,7 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 
-CORS_ALLOWED_HEADERS = [
+CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
     "authorization",
@@ -198,12 +194,28 @@ CORS_ALLOWED_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
-    "x-api-key",  # API key uchun header qo'shamiz
+    "x-api-key",
+    "access-control-allow-credentials",
+    "access-control-allow-origin",
+    "authorization"
 ]
 
-CSRF_COOKIE_SECURE = False  # Development uchun
-CSRF_COOKIE_HTTPONLY = False
+CORS_EXPOSE_HEADERS = [
+    "access-control-allow-origin",
+    "access-control-allow-credentials",
+]
+
+# CSRF protection, but less strict for development
+CSRF_COOKIE_SECURE = False
 CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -292,10 +304,11 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # "rest_framework_api_key.permissions.HasAPIKey",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
+        # Change from requiring authentication by default
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
@@ -399,8 +412,8 @@ GOOGLE_MAP_ID = env.str("GOOGLE_MAP_ID")
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "APP": {
-            "client_id": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"),
-            "secret": env.str("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"),
+            "client_id": "322786648793-lahah2h86g0pgfe45ips0rua3tp1ngtv.apps.googleusercontent.com",
+            "secret": "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",
         },
         "SCOPE": [
             "profile",
@@ -418,20 +431,12 @@ SOCIALACCOUNT_PROVIDERS = {
         "SCOPE": [
             "user",
             "emails",
-            # 'repo',
-            # 'read:org',
-            # "read:user",  # Profil ma'lumotlarini o'qish
-            # "user:email",
-        ],  # Emailni olish uchun kerak
-        # "APP": {
-        #     "client_id": env.str("SOCIAL_AUTH_GITHUB_KEY"),
-        #     "secret": env.str("SOCIAL_AUTH_GITHUB_SECRET"),
-        # },
+        ],
         "AUTH_PARAMS": {
             "allow_signup": "true",
-            "prompt": "consent",  # Har safar ruxsat so'rash
+            "prompt": "consent",
         },
-        "OAUTH_PKCE_ENABLED": True,  # PKCE ni yoqish
+        "OAUTH_PKCE_ENABLED": True,
         "METHOD": "oauth2",
         "VERIFIED_EMAIL": True,
     },
@@ -466,7 +471,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 daqiqa
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Frontend URL (list emas, string bo'lishi kerak)
-FRONTEND_URL = env.str("FRONTEND_URL", default="http://127.0.0.1:8000")
+FRONTEND_URL = env.str("FRONTEND_URL", default="http://localhost:3000")
 
 # URL trailing slash settings
 APPEND_SLASH = False
@@ -475,3 +480,9 @@ APPEND_SLASH = False
 ADMIN_URL = "secret/admin/"
 FORCE_SCRIPT_NAME = None
 LOGIN_REDIRECT_URL = f"/{ADMIN_URL}"
+
+# Social settings
+
+#   Google
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "322786648793-lahah2h86g0pgfe45ips0rua3tp1ngtv.apps.googleusercontent.com"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"

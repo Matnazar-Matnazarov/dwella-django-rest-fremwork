@@ -3,7 +3,7 @@ from .views.websocket_test import index
 from rest_framework.routers import DefaultRouter
 from .api.views import UserViewSet, LogoutView, LoginView
 from .api.masters import MasterAPIView
-from .views.google_login import GoogleLoginView
+from .views.custom_google_login import CustomGoogleLoginView
 
 urlpatterns = [
     path("", index, name="index"),
@@ -19,5 +19,10 @@ urlpatterns += [
     path('api/login/', LoginView.as_view(), name='login'),
     path("api/masters/", MasterAPIView.as_view(), name="masters"),
     path("api/masters/<int:pk>/", MasterAPIView.as_view(), name="master"),
-    path("api/google-login/", GoogleLoginView.as_view(), name="google-login"),
+    
+    # Google login endpoints - providing multiple paths to ensure frontend can connect
+    path("api/google-login/", CustomGoogleLoginView.as_view(), name="google-login"),
+    path("api/google/login/", CustomGoogleLoginView.as_view(), name="google-login-alt"),
+    path("accounts/api/google/login/", CustomGoogleLoginView.as_view(), name="google-login-accounts"),
+    path("accounts/api/google-login/", CustomGoogleLoginView.as_view(), name="google-login-accounts-dash"),
 ]

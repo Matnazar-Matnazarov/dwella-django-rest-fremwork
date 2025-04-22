@@ -1,28 +1,25 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated, SAFE_METHODS
 from rest_framework_api_key.permissions import HasAPIKey
 
 
 class HasAPIKeyOrIsAuthenticated(BasePermission):
+    """
+    Allow access if the request has a valid API key or is authenticated.
+    """
     def has_permission(self, request, view):
-        # API key headerini tekshirish
-        api_key = request.META.get("HTTP_X_API_KEY", "")
-
-        # JWT token tekshirish
-        is_authenticated = bool(request.user and request.user.is_authenticated)
-
-        if not api_key or not is_authenticated:
-            return False
-
-        # API key validatsiyasi
-        try:
-            from rest_framework_api_key.models import APIKey
-
-            api_key_object = APIKey.objects.get_from_key(api_key)
-            if not api_key_object.is_valid(api_key):
-                return False
-
-            # API key valid va JWT token ham valid bo'lsa
+        # Check if it's a read-only request
+        if request.method in SAFE_METHODS:
             return True
-
-        except Exception:
-            return False
+        
+        # For Google login endpoints, no need for authentication
+        if request.path.endswith('/login/') or request.path.endswith('/google-login/'):
+            return True
+        
+        # Check for API key
+        has_api_key = HasAPIKey().has_permission(request, view)
+        
+        # Check for authentication
+        is_authenticated = IsAuthenticated().has_permission(request, view)
+        
+        # Allow if either condition is met
+        return has_api_key or is_authenticated

@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from rest_framework_simplejwt import views as jwt_views
 from .swaggers import schema_view
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from accounts.views.custom_google_login import CustomGoogleLoginView
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
@@ -24,6 +25,9 @@ urlpatterns = [
     path("hitcount/", include("hitcount.urls", namespace="hitcount")),
     # API authentication
     path("api/v1/drf-auth/", include("rest_framework.urls")),
+    # Google login direct endpoints (multiple paths for compatibility)
+    path("api/google-login/", CustomGoogleLoginView.as_view(), name="google-login-root"),
+    path("api/google/login/", CustomGoogleLoginView.as_view(), name="google-login-root-alt"),
     # API documentation
     path(
         "swagger/",
