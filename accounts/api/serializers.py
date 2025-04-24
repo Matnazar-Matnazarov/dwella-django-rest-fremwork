@@ -9,16 +9,23 @@ class UserSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         write_only=True
     )
+    role = serializers.ChoiceField(
+        choices=['CLIENT', 'MASTER'],
+        default='CLIENT'
+    )
     
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password', 'password2')
+        fields = ('id', 'username', 'email', 'password', 'password2', 'role', 'first_name', 'last_name', 'phone_number')
         extra_kwargs = {
             'password': {
                 'write_only': True,
                 'style': {'input_type': 'password'}
             },
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+            'phone_number': {'required': False}
         }
 
     def validate(self, attrs):
@@ -26,8 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "password": "Parollar bir xil emas."
             })
-        if  CustomUser.objects.filter(username = attrs['username'],email=attrs['email']).first():
-             raise serializers.ValidationError({
+        if CustomUser.objects.filter(username=attrs['username'], email=attrs['email']).first():
+            raise serializers.ValidationError({
                 "user or email": "uniqe"
             })
         return attrs
@@ -39,7 +46,11 @@ class UserSerializer(serializers.ModelSerializer):
         # Yangi foydalanuvchi yaratish
         user = CustomUser(
             username=validated_data['username'],
-            email=validated_data['email']
+            email=validated_data['email'],
+            role=validated_data.get('role', 'CLIENT'),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            phone_number=validated_data.get('phone_number', '')
         )
         user.is_active = False
         # Parolni xavfsiz saqlash

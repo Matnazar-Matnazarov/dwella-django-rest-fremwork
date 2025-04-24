@@ -59,7 +59,6 @@ async def send_verification_email(email, verification_url):
     except Exception as e:
         print(f"Email yuborishda xatolik: {e}")
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -78,7 +77,39 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
-
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # Add additional user information
+        data.update({
+            'role': instance.role,
+            'status': instance.is_active,
+            'picture': request.build_absolute_uri(instance.picture.url) if hasattr(instance, 'picture') and instance.picture else None,
+            'phone_number': instance.phone_number if hasattr(instance, 'phone_number') else None
+        })
+        
+        return Response(data)
+    
+    @action(detail=False, methods=['get'])
+    def current_user(self, request):
+        """Get the current authenticated user's information"""
+        user = request.user
+        serializer = self.get_serializer(user)
+        data = serializer.data
+        
+        # Add additional user information
+        data.update({
+            'role': user.role,
+            'status': user.is_active,
+            'picture': request.build_absolute_uri(user.picture.url) if hasattr(user, 'picture') and user.picture else None,
+            'phone_number': user.phone_number if hasattr(user, 'phone_number') else None
+        })
+        
+        return Response(data)
+    
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -227,7 +258,6 @@ class UserViewSet(viewsets.ModelViewSet):
         user = CustomUser.objects.get(email=email)
         user.send_email_verification_token()
         return Response({"message": "Email verification token sent"})
-
 
 class LogoutView(APIView):
     """

@@ -1,11 +1,19 @@
-python manage.py runserver
+###
+POST http://127.0.0.1:8000/accounts/api/login/ HTTP/1.1
+Content-Type: application/json
 
-celery -A config worker -l INFO
+{
+    "username": "Matnazar",
+    "password": "2004"
+}
+
+###
+GET http://127.0.0.1:8000/accounts/user/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NDY3MzkyLCJpYXQiOjE3NDUzODA5OTIsImp0aSI6Ijg4NTA0OGVhNDcwYzRhZTFhYzA0ZDI1ODE0N2E3MjkxIiwidXNlcl9pZCI6MX0.zwznEIaYrabJ74I-hDW0BCTa2K9zUsJUXNOPBXgTsJs
 
 
-celery -A config beat -l INFO
 
-
-sudo systemctl status redis-server
-# Agar ishlamayotgan bo'lsa
-sudo systemctl start redis-server
+### Announcements
+GET http://127.0.0.1:8000/announcements/api/announcement/2/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NDY3MzkyLCJpYXQiOjE3NDUzODA5OTIsImp0aSI6Ijg4NTA0OGVhNDcwYzRhZTFhYzA0ZDI1ODE0N2E3MjkxIiwidXNlcl9pZCI6MX0.zwznEIaYrabJ74I-hDW0BCTa2K9zUsJUXNOPBXgTsJs
+x-api-key: kufQGmDG.LuPMfWoS5SOkSZAjr7gMPMDsRtWmHWnD

@@ -36,6 +36,7 @@ class CustomGoogleLoginView(APIView):
             logger.info(f"Google login request received at: {request.path}")
             print(f"Google login request headers: {request.headers}")
             print(f"Google login request body: {request.data}")
+            print(f"Role received in request: {request.data.get('role', 'Not provided')}")
             
             # Set CORS headers for the actual response
             response_headers = {
@@ -123,6 +124,13 @@ class CustomGoogleLoginView(APIView):
                         # Generate a random password
                         random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
                         
+                        # Get role from request data or default to 'CLIENT'
+                        role = request.data.get('role', 'CLIENT')
+                        if role not in ['CLIENT', 'MASTER']:
+                            role = 'CLIENT'  # Fallback to CLIENT if invalid role
+                        
+                        print(f"Creating user with role: {role}")
+                        
                         user = User.objects.create_user(
                             username=username,
                             email=social_email,
@@ -130,7 +138,7 @@ class CustomGoogleLoginView(APIView):
                             last_name=user_info.get('family_name', ''),
                             password=random_password,
                             is_active=True,
-                            role='CLIENT'  # Default role
+                            role=role  # Use the role from request or default
                         )
                         EmailAddress.objects.create(
                             user=user,
@@ -140,6 +148,12 @@ class CustomGoogleLoginView(APIView):
                         )
                     else:
                         user = User.objects.get(email=social_email)
+                        
+                        # Update role if provided in request
+                        if 'role' in request.data and request.data['role'] in ['CLIENT', 'MASTER']:
+                            user.role = request.data['role']
+                            user.save()
+                            print(f"Updated user role to: {user.role}")
                 
                 # Create or get social account
                 try:

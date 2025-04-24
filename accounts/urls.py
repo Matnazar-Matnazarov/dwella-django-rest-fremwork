@@ -20,6 +20,9 @@ urlpatterns += [
     path("api/masters/", MasterAPIView.as_view(), name="masters"),
     path("api/masters/<int:pk>/", MasterAPIView.as_view(), name="master"),
     
+    # Current user endpoint
+    path('user/', UserViewSet.as_view({'get': 'current_user'}), name='current-user'),
+    
     # Google login endpoints - providing multiple paths to ensure frontend can connect
     path("api/google-login/", CustomGoogleLoginView.as_view(), name="google-login"),
     path("api/google/login/", CustomGoogleLoginView.as_view(), name="google-login-alt"),
