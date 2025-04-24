@@ -51,3 +51,12 @@ celery -A config worker -l info
 # Terminal 2
 celery -A config beat -l info
 
+
+
+## License
+
+This project is dual-licensed under:
+
+- [MIT License](./LICENSE-MIT)
+- [Apache License 2.0](./LICENSE-APACHE)
+
