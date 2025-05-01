@@ -27,16 +27,14 @@ class GoogleLoginView(APIView):
     """
     Custom view to handle Google login properly and respond to CORS preflight requests
     """
-    permission_classes = [AllowAny]  # Allow unauthenticated access
+    permission_classes = [AllowAny] 
     
     def post(self, request, *args, **kwargs):
         try:
-            # Log request
             logger.info(f"Google login request received at: {request.path}")
             print(f"Google login request headers: {request.headers}")
             print(f"Google login request body: {request.data}")
             
-            # Set CORS headers for the actual response
             response_headers = {
                 'Access-Control-Allow-Origin': request.headers.get('Origin', 'http://localhost:3000'),
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -44,7 +42,6 @@ class GoogleLoginView(APIView):
                 'Access-Control-Allow-Credentials': 'true',
             }
             
-            # Check for token
             access_token = request.data.get('access_token')
             if not access_token:
                 return Response(
@@ -53,11 +50,9 @@ class GoogleLoginView(APIView):
                     headers=response_headers
                 )
             
-            # Initialize adapter
             adapter = GoogleOAuth2Adapter(request)
             
             try:
-                # Parse and validate token
                 app = adapter.get_provider().get_app(request)
                 token = adapter.parse_token({'access_token': access_token})
                 token_user = adapter.get_user_info(adapter.get_access_token(token))
@@ -65,7 +60,6 @@ class GoogleLoginView(APIView):
                 
                 print(f"Google user info: {token_user}")
                 
-                # Get or create user
                 from allauth.account.models import EmailAddress
                 from allauth.socialaccount.models import SocialAccount
                 from django.contrib.auth import get_user_model
@@ -76,7 +70,6 @@ class GoogleLoginView(APIView):
                     email_address = EmailAddress.objects.get(email=social_email)
                     user = email_address.user
                 except EmailAddress.DoesNotExist:
-                    # Create user if doesn't exist
                     if not User.objects.filter(email=social_email).exists():
                         user = User.objects.create_user(
                             username=social_email.split('@')[0],
@@ -96,7 +89,6 @@ class GoogleLoginView(APIView):
                     else:
                         user = User.objects.get(email=social_email)
                 
-                # Create or get social account
                 try:
                     social_account = SocialAccount.objects.get(provider='google', user=user)
                 except SocialAccount.DoesNotExist:
@@ -107,11 +99,9 @@ class GoogleLoginView(APIView):
                         extra_data=token_user
                     )
                 
-                # Generate JWT tokens
                 from rest_framework_simplejwt.tokens import RefreshToken
                 refresh = RefreshToken.for_user(user)
                 
-                # Format user data
                 user_data = {
                     'id': user.id,
                     'username': user.username,
@@ -123,7 +113,6 @@ class GoogleLoginView(APIView):
                     'picture': request.build_absolute_uri(user.picture.url) if hasattr(user, 'picture') and user.picture else None,
                 }
                 
-                # Format response
                 formatted_response = {
                     'access': str(refresh.access_token),
                     'refresh': str(refresh),
@@ -132,7 +121,6 @@ class GoogleLoginView(APIView):
                 
                 print(f"Google login successful for user: {user.email}")
                 
-                # Return response with CORS headers
                 response = JsonResponse(formatted_response)
                 for header, value in response_headers.items():
                     response[header] = value

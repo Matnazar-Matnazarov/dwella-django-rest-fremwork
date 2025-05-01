@@ -1,10 +1,11 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Industry, IndustryUser
+from unfold.admin import ModelAdmin
 
 
 @admin.register(Industry)
-class IndustryAdmin(admin.ModelAdmin):
+class IndustryAdmin(ModelAdmin):
     list_display = ("name", "created_at", "updated_at")
     search_fields = ("name",)
     list_filter = ("created_at", "updated_at")
@@ -16,7 +17,7 @@ class IndustryAdmin(admin.ModelAdmin):
 
 
 @admin.register(IndustryUser)
-class IndustryUserAdmin(admin.ModelAdmin):
+class IndustryUserAdmin(ModelAdmin):
     list_display = ("get_industry", "price", "star", "get_status")
     list_filter = ("industry", "star", "created_at")
     search_fields = ("user__username", "user__email", "industry__name")

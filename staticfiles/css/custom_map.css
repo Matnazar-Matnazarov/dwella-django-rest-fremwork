@@ -1,0 +1,22 @@
+/* static/css/custom_map.css */
+.field-location .dj_map_wrapper {
+    width: 100% !important;
+    height: 500px !important;
+    display: block !important;
+}
+
+.field-location .dj_map {
+    width: 100% !important;
+    height: 500px !important;
+    display: block !important;
+}
+
+.field-location .ol-layers {
+    display: block !important;
+}
+
+.field-location .ol-viewport {
+    width: 100% !important;
+    height: 500px !important;
+    display: block !important;
+}

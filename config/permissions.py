@@ -7,10 +7,6 @@ class HasAPIKeyOrIsAuthenticated(BasePermission):
     Allow access if the request has a valid API key or is authenticated.
     """
     def has_permission(self, request, view):
-        # Check if it's a read-only request
-        if request.method in SAFE_METHODS:
-            return True
-        
         # For Google login endpoints, no need for authentication
         if request.path.endswith('/login/') or request.path.endswith('/google-login/'):
             return True

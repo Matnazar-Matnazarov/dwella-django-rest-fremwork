@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<div class="dj_map_wrapper">
+    <div id="{{ map_id }}" class="dj_map" style="width: {{ map_width }}px; height: {{ map_height }}px;"></div>
+    <span class="clear_features"><a href="javascript:geodjango_{{ name }}.clearFeatures();">{% translate "Delete all Features" %}</a></span>
+    <textarea id="{{ id }}" class="vSerializedField required" cols="150" rows="10" name="{{ name }}"{% if hidden %} hidden{% endif %}>{{ value }}</textarea>
+    <script>
+        var base_layer = new ol.layer.Tile({source: new ol.source.OSM()});
+
+        var options = {
+            base_layer: base_layer,
+            geom_name: '{{ geom_name }}',
+            id: '{{ id }}',
+            map_id: '{{ map_id }}',
+            map_srid: {{ map_srid }},
+            name: '{{ name }}'
+        };
+
+        {% if default_lon %}options['default_lon'] = {{ default_lon }};{% endif %}
+        {% if default_lat %}options['default_lat'] = {{ default_lat }};{% endif %}
+        {% if default_zoom %}options['default_zoom'] = {{ default_zoom }};{% endif %}
+
+        var geodjango_{{ name }} = new MapWidget(options);
+    </script>
+</div>

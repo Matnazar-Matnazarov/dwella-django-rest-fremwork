@@ -35,6 +35,10 @@ CELERY_WORKER_PID=$!
 celery -A config beat -l info &
 CELERY_BEAT_PID=$!
 
+
+## doal boot
+celery -A config.celery worker --beat --scheduler django --loglevel=info
+ 
 # Function to handle termination
 cleanup() {
     echo "Shutting down services..."

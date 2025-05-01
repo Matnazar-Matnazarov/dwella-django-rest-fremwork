@@ -278,7 +278,7 @@ class LogoutView(APIView):
         # Clear credentials
         request.auth = None
         logout(request)
-        return Response({"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
+        return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
 
 
 class LoginView(TokenObtainPairView):

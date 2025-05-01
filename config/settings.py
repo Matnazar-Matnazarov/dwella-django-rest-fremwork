@@ -14,6 +14,8 @@ from pathlib import Path
 from environs import Env
 from datetime import timedelta
 import os
+from .django_unfold import *
+import sys
 
 env = Env()
 env.read_env()
@@ -38,7 +40,16 @@ DJANGO_APPS = [
     # "daphne",
     "captcha",  # Captcha add
     "multi_captcha_admin",
+    
+    "unfold",  # before django.contrib.admin
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.inlines",  # optional, if special inlines are needed
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+    "unfold.contrib.guardian",  # optional, if django-guardian package is used
+    "unfold.contrib.simple_history",
 
+    
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -46,6 +57,7 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",  # geo location
+    "django.contrib.sites",  # Required for django-allauth
 ]
 
 THIRD_PARTY_APPS = [
@@ -65,12 +77,15 @@ THIRD_PARTY_APPS = [
     "django_json_widget",  # json filds admin panel
     "hitcount",  # hitcount
     "import_export",  # import export
+    "simple_history",
+    "django_celery_beat",
     # Allauth
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",  # Google oauth
     "allauth.socialaccount.providers.github",  # Github
+    
 
   
 ]
@@ -84,6 +99,7 @@ LOCAL_APPS = [
     "chat",
     "connect_announcements",
     "industry",
+    "app"
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ["corsheaders"]
@@ -111,7 +127,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / "templates"],  # templates papkasini qo'shing
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -486,3 +502,14 @@ LOGIN_REDIRECT_URL = f"/{ADMIN_URL}"
 #   Google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "322786648793-lahah2h86g0pgfe45ips0rua3tp1ngtv.apps.googleusercontent.com"
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
+
+# Test runner
+TEST_RUNNER = 'accounts.tests.test_runner.ColoredTestRunner'
+
+# Test muhiti uchun throttling sozlamalari
+if 'test' in sys.argv:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = []
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {}
+
+# Unfold sozlamalari
+from .django_unfold import UNFOLD

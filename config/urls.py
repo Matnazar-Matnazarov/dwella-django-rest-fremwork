@@ -21,6 +21,8 @@ urlpatterns = [
     path("images/", include("images.urls")),
     path("chat/", include("chat.urls")),
     path("industry/", include("industry.urls")),
+    path("app/", include("app.urls")),
+    
     # hitcount
     path("hitcount/", include("hitcount.urls", namespace="hitcount")),
     # API authentication
@@ -48,6 +50,8 @@ urlpatterns = [
         jwt_views.TokenBlacklistView.as_view(),
         name="token_blacklist",
     ),
+    
+    
 ]
 
 # Static and media files for development

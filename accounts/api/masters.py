@@ -14,7 +14,6 @@ from django.views.decorators.vary import vary_on_headers
 
 class MasterAPIView(APIView):
     serializer_class = MasterSerializer
-    throttle_classes = [UserRateThrottle]
     permission_classes = [HasAPIKeyOrIsAuthenticated]
     pagination_class = PageNumberPagination
 

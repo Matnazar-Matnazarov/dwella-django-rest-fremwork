@@ -51,6 +51,8 @@ celery -A config worker -l info
 # Terminal 2
 celery -A config beat -l info
 
+# Or
+celery -A config.celery worker --beat --scheduler django --loglevel=info
 
 
 ## License

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import ConnectAnnouncement
+from unfold.admin import ModelAdmin
 
 
 @admin.register(ConnectAnnouncement)
-class ConnectAnnouncementAdmin(admin.ModelAdmin):
+class ConnectAnnouncementAdmin(ModelAdmin):
     list_display = [
         "id",
         "guid",

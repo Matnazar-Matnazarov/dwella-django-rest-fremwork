@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import Image
+from unfold.admin import ModelAdmin
 
 
 @admin.register(Image)
-class ImageAdmin(admin.ModelAdmin):
+class ImageAdmin(ModelAdmin):
     list_display = [
         "id",
         "guid",

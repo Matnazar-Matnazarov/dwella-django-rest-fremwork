@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import Chat
+from unfold.admin import ModelAdmin
 
 
 @admin.register(Chat)
-class ChatAdmin(admin.ModelAdmin):
+class ChatAdmin(ModelAdmin):
     list_display = [
         "id",
         "master",

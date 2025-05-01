@@ -1,12 +1,14 @@
 from django.contrib import admin
-from django.contrib.admin.sites import AdminSite
-from django.urls import path
 from django.utils.html import format_html
-from .forms import AdminLoginForm
 from .models import CustomUser, Like
+from unfold.admin import ModelAdmin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import  Group
+
+
 
 @admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(ModelAdmin):
     """Admin configuration for CustomUser model"""
 
     list_display = (
@@ -15,6 +17,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         "full_name",
         "role",
         "status_badge",
+        "picture_preview",
         "last_login",
     )
     list_display_links = ("username", "email")
@@ -54,7 +57,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         ),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
-    readonly_fields = ("date_joined", "last_login")
+    readonly_fields = ("date_joined", "last_login", "picture_preview")
 
     def status_badge(self, obj):
         if obj.is_active:
@@ -68,9 +71,16 @@ class CustomUserAdmin(admin.ModelAdmin):
 
     full_name.short_description = "Full Name"
 
+    def picture_preview(self, obj):
+        if obj.picture:
+            return format_html('<img src="{}" width="50" height="50" style="border-radius: 50%;" />', obj.picture.url)
+        return format_html('<img src="/static/users/default-avatar.png" width="50" height="50" style="border-radius: 50%;" />')
+    
+    picture_preview.short_description = "Profile Picture"
+
 
 @admin.register(Like)
-class LikeAdmin(admin.ModelAdmin):
+class LikeAdmin(ModelAdmin):
     """Admin configuration for Like model"""
 
     list_display = ("user", "master", "is_like", "created_at")
@@ -82,3 +92,10 @@ class LikeAdmin(admin.ModelAdmin):
     # raw_id_fields = ("user", "master")
 
    
+   
+admin.site.unregister(Group)
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
+
