@@ -1,3 +1,4 @@
+# Dwella/chat/consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -14,46 +15,40 @@ User = get_user_model()
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope['user']
-        
         if not self.user.is_authenticated:
             await self.close()
             return
-        
-        # Get announcement and user ids from URL route parameters
+
         self.connect_announcement_id = self.scope['url_route']['kwargs']['connect_announcement_id']
         self.master_id = self.scope['url_route']['kwargs']['master_id']
         self.client_id = self.scope['url_route']['kwargs']['client_id']
-        
-        # Create unique group name based on announcement, master, and client
-        # Sort IDs to ensure same group regardless of who connects first
+
+        # Foydalanuvchi haqiqatan ham master yoki client ekanligini tekshirish
+        if str(self.user.id) not in [str(self.master_id), str(self.client_id)]:
+            await self.close()
+            return
+
+        # Guruh nomi har doim bir xil bo‘lishi uchun
         user_ids = sorted([str(self.master_id), str(self.client_id)])
         self.room_group_name = f"chat_{self.connect_announcement_id}_{user_ids[0]}_{user_ids[1]}"
-        
-        # Join room group
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
-        
         await self.accept()
-    
+
     async def disconnect(self, close_code):
-        # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
-    
-    # Receive message from WebSocket
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data.get('message', '')
         image_data = data.get('image', None)
-        
-        # Save message to database
         chat = await self.save_message(message, image_data)
-        
-        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -66,10 +61,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'chat_id': str(chat.id)
             }
         )
-    
-    # Receive message from room group
+
     async def chat_message(self, event):
-        # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': event['message'],
             'image': event['image'],
@@ -78,29 +71,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'timestamp': event['timestamp'],
             'chat_id': event['chat_id']
         }))
-    
+
     @database_sync_to_async
     def save_message(self, message, image_data=None):
         connect_announcement = ConnectAnnouncement.objects.get(id=self.connect_announcement_id)
         master = User.objects.get(id=self.master_id)
         client = User.objects.get(id=self.client_id)
-        
         chat = Chat(
             message=message,
             connect_announcement=connect_announcement,
             master=master,
             client=client
         )
-        
-        # Handle image upload if present
         if image_data and "base64," in image_data:
             format, imgstr = image_data.split('base64,')
             ext = format.split('/')[-1].split(';')[0]
             file_name = f"{uuid.uuid4()}.{ext}"
-            
-            # Create ContentFile from decoded base64 data
             data = ContentFile(base64.b64decode(imgstr), name=file_name)
             chat.image = data
-        
         chat.save()
-        return chat 
+        return chat

@@ -6,6 +6,8 @@ from .models import Announcement
 from django.contrib import admin
 from django.utils.html import format_html
 from unfold.widgets import UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
+from hitcount.models import Hit, HitCount
+from django.contrib.contenttypes.models import ContentType
 
 
 class AnnouncementAdminForm(forms.ModelForm):
@@ -162,5 +164,10 @@ class AnnouncementAdmin(ModelAdmin):
     make_inactive.short_description = "Tanlangan e'lonlarni faolsizlantirish"
 
     def hit_count(self, obj):
-        return obj.hit_count_generic.count()
+        ctype = ContentType.objects.get_for_model(Announcement)
+        try:
+            hitcount = HitCount.objects.get(content_type=ctype, object_pk=str(obj.pk))
+            return hitcount.hits
+        except HitCount.DoesNotExist:
+            return 0
     hit_count.short_description = "Ko'rishlar soni"

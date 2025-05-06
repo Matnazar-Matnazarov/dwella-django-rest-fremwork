@@ -47,8 +47,17 @@ class AnnouncementSerializer(GeoFeatureModelSerializer):
     def get_hit_count(self, obj):
         """Return the hit count for the announcement"""
         try:
-            return obj.hit_count_generic.count()
-        except:
+            from hitcount.models import HitCount
+            from django.contrib.contenttypes.models import ContentType
+            
+            ctype = ContentType.objects.get_for_model(Announcement)
+            try:
+                hitcount = HitCount.objects.get(content_type=ctype, object_pk=str(obj.pk))
+                return hitcount.hits
+            except HitCount.DoesNotExist:
+                return 0
+        except Exception as e:
+            print(f"Error getting hit count: {e}")
             return 0
 
     def create(self, validated_data):
