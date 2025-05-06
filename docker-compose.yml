@@ -1,107 +1,72 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  web:
-    build: .
-    command: >
-      sh -c "python manage.py collectstatic --noinput &&
-             python manage.py migrate &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 
-             --workers 4 
-             --worker-class uvicorn.workers.UvicornWorker 
-             --max-requests 1000 
-             --max-requests-jitter 50 
-             --timeout 120"
-    volumes:
-      - .:/app
-      - static_volume:/app/static
-      - media_volume:/app/media
-    expose:
-      - 8000
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  daphne:
-    build: .
-    command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
-    volumes:
-      - .:/app
-    expose:
-      - 8001
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  celery_worker:
-    build: .
-    command: celery -A config worker --loglevel=info --concurrency=4
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  celery_beat:
-    build: .
-    command: celery -A config beat --loglevel=info
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-
-  nginx:
-    build: ./nginx
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
-    ports:
-      - "80:80"
-    depends_on:
-      - web
-      - daphne
-
-  db:
-    image: postgres:16
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - .env
-    ports:
-      - "5432:5432"
-    command: >
-      -c shared_buffers=256MB
-      -c max_connections=200
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
+    image: redis:7
+    restart: always
     ports:
       - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
+  web:
+    build: .
+    command: sh -c "
+      python manage.py wait_for_db &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    "
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=supersecretkey
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - DB_NAME=dwelladb
+      - DB_USER=dwelladbuser
+      - DB_PASSWORD=supersecretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379
+
+  celery:
+    build: .
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=1
+      - DB_NAME=dwelladb
+      - DB_USER=dwelladbuser
+      - DB_PASSWORD=supersecretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379
+
+  celery-beat:
+    build: .
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=1
+      - DB_NAME=dwelladb
+      - DB_USER=dwelladbuser
+      - DB_PASSWORD=supersecretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379
 
 volumes:
   postgres_data:
-  redis_data:
-  static_volume:
-  media_volume:

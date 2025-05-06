@@ -1,33 +1,27 @@
-FROM python:3.12-slim
+# Python rasmiysidan foydalanamiz
+FROM python:3.11-slim
 
-# O'zgaruvchilarni o'rnatish
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# Ishchi direktoriyani yaratish
+# Ishchi katalog yaratamiz
 WORKDIR /app
 
-# System dependencies o'rnatish
+# System dependencieslarni o'rnatamiz
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
-    postgis \
-    gdal-bin \
+    netcat \
     && rm -rf /var/lib/apt/lists/*
 
-# Python dependencies o'rnatish
+# Requirements faylini nusxalab olamiz
 COPY requirements.txt .
+
+# Python kutubxonalarni o'rnatamiz
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Proyekt fayllarini ko'chirish
+# Loyihani ichkariga nusxalash
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /app/static /app/media
+# Port ochamiz (Django uchun default 8000)
+EXPOSE 8000
 
-# Permissions
-RUN chown -R nobody:nogroup /app/static /app/media
-USER nobody
-
-# Gunicorn va Daphne uchun portlarni ochish
-EXPOSE 8000 8001
+# Entry point sifatida wait-for-redis va Django serverni ishlatamiz
+CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 config.asgi:application"]
