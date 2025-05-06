@@ -240,11 +240,11 @@ DATABASES = {
         "ENGINE": env.str(
             "DB_ENGINE", default="django.contrib.gis.db.backends.postgis"
         ),
-        "NAME": env.str("DB_NAME"),
-        "USER": env.str("DB_USER"),
-        "PASSWORD": env.str("DB_PASSWORD"),
-        "HOST": env.str("DB_HOST"),
-        "PORT": env.str("DB_PORT"),
+        "NAME": env.str("DB_NAME", default="dwella_rffb"),
+        "USER": env.str("DB_USER", default="root"),
+        "PASSWORD": env.str("DB_PASSWORD", default="Zjz7RsQhjEzeDeXXJG3tjNG6TpqWRyYF"),
+        "HOST": env.str("DB_HOST", default="dpg-d0cqsdemcj7s73arvngg-a.render.com"),
+        "PORT": env.str("DB_PORT", default="5432"),
     }
 }
 
