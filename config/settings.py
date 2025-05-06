@@ -144,39 +144,39 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 
-# Redis connection settings
-REDIS_HOST = env.str("REDIS_HOST")
-REDIS_PORT = env.int("REDIS_PORT")
+# # Redis connection settings
+# REDIS_HOST = env.str("REDIS_HOST")
+# REDIS_PORT = env.int("REDIS_PORT")
 
-# Cache configuration
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
-            "SOCKET_TIMEOUT": 5,  # seconds
-            "RETRY_ON_TIMEOUT": True,
-            "MAX_CONNECTIONS": 1000,
-            "PARSER_CLASS": "redis.connection._HiredisParser",
-        },
-    }
-}
+# # Cache configuration
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
+#             "SOCKET_TIMEOUT": 5,  # seconds
+#             "RETRY_ON_TIMEOUT": True,
+#             "MAX_CONNECTIONS": 1000,
+#             "PARSER_CLASS": "redis.connection._HiredisParser",
+#         },
+#     }
+# }
 
 
-CHANNEL_REDIS_HOST = env.str("CHANNEL_REDIS_HOST")
-CHANNEL_REDIS_PORT = env.int("CHANNEL_REDIS_PORT")
+# CHANNEL_REDIS_HOST = env.str("CHANNEL_REDIS_HOST")
+# CHANNEL_REDIS_PORT = env.int("CHANNEL_REDIS_PORT")
 
-# Channels layer configuration
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT)],
-        },
-    },
-}
+# # Channels layer configuration
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT)],
+#         },
+#     },
+# }
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for testing
